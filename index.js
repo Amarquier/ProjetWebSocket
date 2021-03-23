@@ -3,6 +3,10 @@ const sqlite3 = require("sqlite3").verbose();
 const app = express();
 const path = require("path");
 const db_name = path.join(__dirname, "data", "apptest.db");
+const cookieSession = require('cookie-session');
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
+
 
 const sql_create_L = `CREATE TABLE IF NOT EXISTS Livres (
   Livre_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,19 +81,23 @@ db.run(sql_create_D, err => {
     console.log("Alimentation réussie de la table 'Livres'");
   });
 
-
-app.listen(3000, () => {
-  console.log("Serveur démarré (http://localhost:3000/) !");
-});
-
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
+
 app.get("/", (req, res) => {
   // res.send("Bonjour le monde...");
-  res.render("index");
+  res.render("login");
 });
+
+app.use(cookieSession({
+  secret: 'Ciclismo',
+  maxAge: 3 * 60 * 1000
+}));
+
+app.locals.users = [];
+app.locals.messages = [];
 
 app.get("/", (req, res) => {
   res.send("Bonjour le monde...");
@@ -119,9 +127,13 @@ app.get("/livres", (req, res) => {
   });
 });
 
-app.get("/chat", (req, res) => {
-  res.render("chat");
-});
+app.post('/chat', (req, res) => {
+  let user = req.body.nickname;
+  req.session.userName = user;
+
+  const users = app.locals.users.filter(u => u !== user);
+  res.render('chat', { user, users, messages: app.locals.messages });
+})
 
 // GET /edit/5
 app.get("/edit/:id", (req, res) => {
@@ -167,12 +179,6 @@ app.post("/discuss/:id", (req, res) => {
   });
 });
 
-// Configuration du serveur
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.static("public"));
-app.use(express.urlencoded({ extended: false })); // <--- paramétrage du middleware
-
 // GET /create
 app.get("/create", (req, res) => {
   res.render("create", { model: {} });
@@ -207,3 +213,29 @@ app.post("/delete/:id", (req, res) => {
     res.redirect("/livres");
   });
 });
+
+io.on('connection', socket => {
+  let login;
+
+  socket.on('login', data => {
+    const user = data.user;
+    app.locals.users.push(user);
+    login = user;
+
+    socket.broadcast.emit('user-connected', { user: login });
+    console.log('conected: ', login)
+  });
+
+  socket.on('disconnect', () => {
+    console.log("Disconnected: ", login);
+    app.locals.users.splice(app.locals.users.indexOf(login), 1);
+    io.emit('user-disconnected', { user: login });
+  });
+
+  socket.on('new-message', msg => {
+    app.locals.messages.push(msg);
+    io.emit('new-message', msg);
+  });
+});
+
+http.listen(3000, () => console.log('listening on *:3000'));
