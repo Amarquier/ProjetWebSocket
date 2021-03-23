@@ -4,20 +4,24 @@
 <div class="mainbox">
     <aside class="contacts">
 	  <div >
-        <p>Utilisateurs connectés</p>
+        <h2>------------------------------</h2>
+        <h2>Utilisateur(s) connecté(s) :</h2>
 	  </div>
       <%users.forEach(username => {%>
         <div class="user" id=<%=username%>>
           <span class="state"><i class="far fa-circle"></i></span>
-          <p class="name"><%=username%></p>
+          <h3><%=username%></h3>
           <i class="fas fa-ellipsis-v"></i>
+
         </div>
       <%})%>
     </aside>
 	
     <div class="conversation">
+		<h2>------------------------------</h2>
 
-      <div class="chat" id="chat">
+		<div class="chat" id="chat">
+
         <% messages.forEach(msg => {%>
           <div class="message">
             <p class="title">
@@ -41,7 +45,7 @@
       const socket = io();
       socket.emit('login', { user: '<%= user %>'});
       socket.on('user-connected', (state) => {
-        $('#chat').append(`<p class='conected'>${state.user} connected</p>`);
+        $('#chat').append(`<p class='connected'>${state.user} connected</p>`);
         $('.contacts').append(`<div class="user" id=${state.user}>
             <span class="state"><i class="far fa-circle"></i></span>
             <p class="name">${state.user}</p>
@@ -49,7 +53,7 @@
           </div>`);
       });
       socket.on('user-disconnected', state => {
-        $('#chat').append(`<p class='conected'>${state.user} disconnected</p>`);
+        $('#chat').append(`<p class='connected'>${state.user} disconnected</p>`);
         $(`#${state.user}`).remove();
       });
       $('#send').on('keydown', function(e){

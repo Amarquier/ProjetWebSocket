@@ -225,7 +225,9 @@ app.get("/discuss/:id", (req, res) => {
   const sql = "SELECT * FROM Livres WHERE Livre_ID = ?";
   db.get(sql, id, (err, row) => {
     // if (err) ...
-    res.render("discuss", { model: row });
+	var pseudo = req.session.pseudo;
+
+    res.render("discuss", { model : row, pseudo });
   });
 	}
 });
