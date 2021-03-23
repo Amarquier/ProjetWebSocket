@@ -3,9 +3,12 @@ const sqlite3 = require("sqlite3").verbose();
 const app = express();
 const path = require("path");
 const db_name = path.join(__dirname, "data", "apptest.db");
-const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser')
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+const session = require('express-session');
+
 
 
 const sql_create_L = `CREATE TABLE IF NOT EXISTS Livres (
@@ -86,20 +89,58 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 
-app.get("/", (req, res) => {
-  res.render("index");
-});
-
-app.use(cookieSession({
-  secret: 'Ciclismo',
-  maxAge: 3 * 60 * 1000
-}));
+app.use(cookieParser());
+app.use(session({secret: "labandeabader"}));
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 app.locals.users = [];
 app.locals.messages = [];
 
+app.get("/", (req, res) => {
+    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+    req.session.pseudo = req.body.pseudo;
+	var pseudo = req.body.pseudo;
+    res.render("index", {model: pseudo});
+    }
+});
+
+app.post("/goodlogin", (req, res) => {
+    
+    // creer la session à partir
+    req.session.pseudo = req.body.pseudo;
+    var pseudo = req.body.pseudo;
+    // créer l'utilisateur s'il n'existe pas déjà
+    const sql = "SELECT nomUtilisateur FROM Utilisateur where nomUtilisateur='"+pseudo+"'";
+    db.all(sql, [], (err, pseudo) => {
+        if (err) {
+            return console.error(err.message);
+        }
+        if(pseudo.length == 0) {
+            const sql2 = "INSERT INTO Utilisateur (nomUtilisateur) VALUES ('"+req.body.pseudo+"')"; 
+
+            console.log(sql2);
+            db.run(sql2, [], err => {
+                if (err) {
+                    return console.error(err.message);
+                }
+            });
+        }
+    });
+    res.render("goodlogin", {model : pseudo});
+});
+
 app.get("/about", (req, res) => {
-  res.render("about");
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
+	res.render("about");
+	}
 });
 
 app.get("/login", (req, res) => {
@@ -107,6 +148,12 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/data", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID";
   db.all(sql, [], (err, rows) => {
     if (err) {
@@ -115,9 +162,16 @@ app.get("/data", (req, res) => {
 	// console.log(rows);
     res.render("data", { model: rows });
   });
+	}
 });
 
 app.get("/livres", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const sql = "SELECT * FROM Livres ORDER BY Titre";
   db.all(sql, [], (err, rows) => {
     if (err) {
@@ -125,18 +179,32 @@ app.get("/livres", (req, res) => {
     }
     res.render("livres", { model: rows });
   });
+	}
 });
 
-app.post('/chat', (req, res) => {
+app.get('/chat', (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   let user = req.body.nickname;
-  req.session.userName = user;
+  req.session.pseudo = user;
 
   const users = app.locals.users.filter(u => u !== user);
   res.render('chat', { user, users, messages: app.locals.messages });
+	}
 })
 
 // GET /edit/5
 app.get("/edit/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const sql = "SELECT * FROM Livres WHERE Livre_ID = ?";
   db.get(sql, id, (err, row) => {
@@ -145,19 +213,33 @@ app.get("/edit/:id", (req, res) => {
     }
     res.render("edit", { model: row });
   });
+	}
 });
 
 app.get("/discuss/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const sql = "SELECT * FROM Livres WHERE Livre_ID = ?";
   db.get(sql, id, (err, row) => {
     // if (err) ...
     res.render("discuss", { model: row });
   });
+	}
 });
 
 // POST /edit/5
 app.post("/edit/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const book = [req.body.Titre, req.body.Auteur, req.body.Commentaires, id];
   const sql = "UPDATE Livres SET Titre = ?, Auteur = ?, Commentaires = ? WHERE (Livre_ID = ?)";
@@ -167,9 +249,16 @@ app.post("/edit/:id", (req, res) => {
     }
     res.redirect("/livres");
   });
+	}
 });
 
 app.post("/discuss/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const sql = "INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES (?, ?, ?) ;";
   console.log("nomuser"+req.body.nomUtilisateur);
@@ -196,42 +285,70 @@ app.post("/discuss/:id", (req, res) => {
 			console.log("envoyer la notification")
 		)
 	});
-  
+	}
 });
 
 // GET /create
 app.get("/create", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   res.render("create", { model: {} });
+	}
 });
 
 // POST /create
 app.post("/create", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const sql = "INSERT INTO Livres (Titre, Auteur, Commentaires) VALUES (?, ?, ?)";
   const book = [req.body.Titre, req.body.Auteur, req.body.Commentaires];
   db.run(sql, book, err => {
     // if (err) ...
     res.redirect("/livres");
   });
+	}
 });
 
 // GET /delete/5
 app.get("/delete/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const sql = "SELECT * FROM Livres WHERE Livre_ID = ?";
   db.get(sql, id, (err, row) => {
     // if (err) ...
     res.render("delete", { model: row });
   });
+	}
 });
 
 // POST /delete/5
 app.post("/delete/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
   const id = req.params.id;
   const sql = "DELETE FROM Livres WHERE Livre_ID = ?";
   db.run(sql, id, err => {
     // if (err) ...
     res.redirect("/livres");
   });
+	}
 });
 
 io.on('connection', socket => {
