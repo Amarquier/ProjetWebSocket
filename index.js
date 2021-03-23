@@ -101,8 +101,7 @@ app.get("/", (req, res) => {
     if(!req.session.pseudo){
         res.render("login");
     } else {
-    req.session.pseudo = req.body.pseudo;
-	var pseudo = req.body.pseudo;
+	var pseudo = req.session.pseudo
     res.render("index", {model: pseudo});
     }
 });
@@ -189,8 +188,7 @@ app.get('/chat', (req, res) => {
         var model = {
             pseudo : req.session.pseudo
     };
-  let user = req.body.nickname;
-  req.session.pseudo = user;
+  var user = req.session.pseudo;
 
   const users = app.locals.users.filter(u => u !== user);
   res.render('chat', { user, users, messages: app.locals.messages });
