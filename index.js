@@ -69,17 +69,17 @@ db.run(sql_create_D, err => {
     console.log("Alimentation réussie de la table 'Livres'");
   });
   
-  const sql_insert_2 = `INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES
-  (1, 'toto', now()),
-  (2, 'titi', now()),
-  (3, 'tata', now());`;
+  // const sql_insert_2 = `INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES
+  // (1, 'toto', now()),
+  // (2, 'titi', now()),
+  // (3, 'tata', now());`;
   
-  db.run(sql_insert_2, err => {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log("Alimentation réussie de la table 'Livres'");
-  });
+  // db.run(sql_insert_2, err => {
+    // if (err) {
+      // return console.error(err.message);
+    // }
+    // console.log("Alimentation réussie de la table 'Livres'");
+  // });
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -108,11 +108,12 @@ app.get("/about", (req, res) => {
 });
 
 app.get("/data", (req, res) => {
-  const sql = "SELECT * FROM Discuter ORDER BY dateDiscussion";
+  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID";
   db.all(sql, [], (err, rows) => {
     if (err) {
       return console.error(err.message);
     }
+	// console.log(rows);
     res.render("data", { model: rows });
   });
 });
@@ -171,12 +172,32 @@ app.post("/edit/:id", (req, res) => {
 
 app.post("/discuss/:id", (req, res) => {
   const id = req.params.id;
-  const book = [req.body.Titre, req.body.Auteur, req.body.Commentaires, id];
-  const sql = "INSERT INTO Discussion livre_ID = ?, nomUtilisateur = ?, dateDiscussion = ? ;";
+  const sql = "INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES (?, ?, ?) ;";
+  console.log("nomuser"+req.body.nomUtilisateur);
+  console.log("date"+req.body.dateDiscussion);
+  console.log("id"+id);
+  const nomUtilisateur=req.body.nomUtilisateur;
+  const dateDiscussion=req.body.dateDiscussion;
+  const book = [id, req.body.nomUtilisateur, req.body.dateDiscussion];
   db.run(sql, book, err => {
-    // if (err) ...
-    res.redirect("/discuss");
+    if (err) {
+      return console.error(err.message);
+    }
+    res.redirect("/data");
   });
+  const sql2 = "SELECT * FROM Discuter WHERE dateDiscussion = '"+dateDiscussion+"' AND livre_ID = "+id+";";
+  db.all(sql2, [], (err, rows) => {
+    if (err) {
+      return console.error(err.message);
+    }
+	// console.log(rows);
+	// console.log(rows.length);
+	if (rows.length>=2)
+		( 
+			console.log("envoyer la notification")
+		)
+	});
+  
 });
 
 // GET /create

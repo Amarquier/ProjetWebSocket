@@ -1,16 +1,15 @@
 <%- include("_header") -%>
 
-<h1>Liste des livres (<%= model.length %>)</h1>
+<h1>Liste des discussions prévues (<%= model.length %>)</h1>
 
 <div class="table-responsive-sm">
   <table class="table table-hover">
     <thead>
       <tr>
-        <th>Titre</th>
-        <th>Auteur</th>
-        <th>Commentaires</th>
+        <th>Date</th>
+        <th>livre</th>
+        <th>utilisateurs</th>
         <th class="d-print-none">
-          <a class="btn btn-sm btn-success" href="/create">Ajouter</a>
         </th>
       </tr>
     </thead>
@@ -18,12 +17,10 @@
       <% for (const book of model) { %>
         <tr>
           <td><%= book.dateDiscussion %></td>
-          <td><%= book.Livre_ID %></td>
+          <td><%= book.Titre %></td>
           <td><%= book.nomUtilisateur %></td>
           <td class="d-print-none">
-            <a class="btn btn-sm btn-warning" href="/discuss/">En discuter</a>
-            <a class="btn btn-sm btn-warning" href="/edit/">Modifier</a>
-            <a class="btn btn-sm btn-danger" href="/delete/">Effacer</a>
+            <a class="btn btn-sm btn-warning" href="/join/">Rejoindre</a>
           </td>
         </tr>
       <% } %>
