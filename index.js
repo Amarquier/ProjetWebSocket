@@ -87,8 +87,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => {
-  // res.send("Bonjour le monde...");
-  res.render("login");
+  res.render("index");
 });
 
 app.use(cookieSession({
@@ -99,12 +98,12 @@ app.use(cookieSession({
 app.locals.users = [];
 app.locals.messages = [];
 
-app.get("/", (req, res) => {
-  res.send("Bonjour le monde...");
-});
-
 app.get("/about", (req, res) => {
   res.render("about");
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
 });
 
 app.get("/data", (req, res) => {
