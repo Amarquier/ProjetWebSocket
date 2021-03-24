@@ -9,26 +9,54 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const session = require('express-session');
 
-const sql_create_L = `CREATE TABLE IF NOT EXISTS Livres (
+const sql_create = [`CREATE TABLE IF NOT EXISTS Livres (
   Livre_ID INTEGER PRIMARY KEY AUTOINCREMENT,
   Titre VARCHAR(100) NOT NULL,
   Auteur VARCHAR(100) NOT NULL,
   Commentaires TEXT
-);`;
-
-const sql_create_U = `CREATE TABLE IF NOT EXISTS Utilisateur(
+);
+`,`
+CREATE TABLE IF NOT EXISTS Utilisateur(
    nomUtilisateur VARCHAR(50),
    PRIMARY KEY(nomUtilisateur)
-);`;
+);
+`,`
+CREATE TABLE IF NOT EXISTS Creneau(
+   idcreneau INTEGER,
+   dateCreneau DATE NOT NULL,
+   livre_ID INT NOT NULL,
+   PRIMARY KEY(idcreneau),
+   FOREIGN KEY(livre_ID) REFERENCES Livres(livre_ID)
+);
 
-const sql_create_D = `CREATE TABLE IF NOT EXISTS Discuter(
+`,`
+CREATE TABLE IF NOT EXISTS Discuter(
    livre_ID INT,
    nomUtilisateur VARCHAR(50),
+   idcreneau INT,
    dateDiscussion DATE,
+   PRIMARY KEY(livre_ID, nomUtilisateur, idcreneau),
+   FOREIGN KEY(livre_ID) REFERENCES Livres(livre_ID),
+   FOREIGN KEY(nomUtilisateur) REFERENCES Utilisateur(nomUtilisateur),
+   FOREIGN KEY(idcreneau) REFERENCES Creneau(idcreneau)
+);
+`,`
+CREATE TABLE IF NOT EXISTS posséder(
+   nomUtilisateur VARCHAR(50),
+   idcreneau INT,
+   PRIMARY KEY(nomUtilisateur, idcreneau),
+   FOREIGN KEY(nomUtilisateur) REFERENCES Utilisateur(nomUtilisateur),
+   FOREIGN KEY(idcreneau) REFERENCES Creneau(idcreneau)
+);
+`,`
+CREATE TABLE IF NOT EXISTS Aimer(
+   livre_ID INT,
+   nomUtilisateur VARCHAR(50),
    PRIMARY KEY(livre_ID, nomUtilisateur),
-   FOREIGN KEY(livre_ID) REFERENCES Livre(livre_ID),
+   FOREIGN KEY(livre_ID) REFERENCES Livres(livre_ID),
    FOREIGN KEY(nomUtilisateur) REFERENCES Utilisateur(nomUtilisateur)
-);`;
+);
+`];
 
 const db = new sqlite3.Database(db_name, err => {
   if (err) {
@@ -36,39 +64,30 @@ const db = new sqlite3.Database(db_name, err => {
   }
   console.log("Connexion réussie à la base de données 'apptest.db'");
 });
-
-db.run(sql_create_L, err => {
+for (let i = 0; i < sql_create.length; i++) {
+  db.run(sql_create[i], err => {
   if (err) {
     return console.error(err.message);
   }
-  console.log("Création réussie de la table 'Livres'");
-});
-
-db.run(sql_create_U, err => {
-  if (err) {
-    return console.error(err.message);
+  console.log("Création réussie de la table "+i);
+  
+  if (sql_create[i].includes(`CREATE TABLE IF NOT EXISTS Livres`))
+  {
+	// Alimentation de la table
+	const sql_insert = `INSERT INTO Livres (Livre_ID, Titre, Auteur, Commentaires) VALUES
+	(1, 'Mrs. Bridge', 'Evan S. Connell', 'Premier de la série'),
+	(2, 'Mr. Bridge', 'Evan S. Connell', 'Second de la série'),
+	(3, 'L''ingénue libertine', 'Colette', 'Minne + Les égarements de Minne');`;
+	db.run(sql_insert, err => {
+	if (err) {
+	  return console.error(err.message);
+	}
+	console.log("Alimentation réussie de la table 'Livres'");
+	});
   }
-  console.log("Création réussie de la table 'Utilisateur'");
+  
 });
-
-db.run(sql_create_D, err => {
-  if (err) {
-    return console.error(err.message);
-  }
-  console.log("Création réussie de la table 'Discuter'");
-});
-
-// Alimentation de la table
-  const sql_insert = `INSERT INTO Livres (Livre_ID, Titre, Auteur, Commentaires) VALUES
-  (1, 'Mrs. Bridge', 'Evan S. Connell', 'Premier de la série'),
-  (2, 'Mr. Bridge', 'Evan S. Connell', 'Second de la série'),
-  (3, 'L''ingénue libertine', 'Colette', 'Minne + Les égarements de Minne');`;
-  db.run(sql_insert, err => {
-    if (err) {
-      return console.error(err.message);
-    }
-    console.log("Alimentation réussie de la table 'Livres'");
-  });
+}
   
   // const sql_insert_2 = `INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES
   // (1, 'toto', now()),
@@ -151,7 +170,7 @@ app.get("/data", (req, res) => {
         var model = {
             pseudo : req.session.pseudo
     };
-  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID";
+  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID GROUP BY idcreneau";
   db.all(sql, [], (err, rows) => {
     if (err) {
       return console.error(err.message);
@@ -254,35 +273,71 @@ app.post("/edit/:id", (req, res) => {
 app.post("/discuss/:id", (req, res) => {
 	    if(!req.session.pseudo){
         res.render("login");
-    } else {
-        var model = {
-            pseudo : req.session.pseudo
-    };
-  const id = req.params.id;
-  const sql = "INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion) VALUES (?, ?, ?) ;";
-  console.log("nomuser"+req.body.nomUtilisateur);
-  console.log("date"+req.body.dateDiscussion);
-  console.log("id"+id);
-  const nomUtilisateur=req.body.nomUtilisateur;
-  const dateDiscussion=req.body.dateDiscussion;
-  const book = [id, req.body.nomUtilisateur, req.body.dateDiscussion];
-  db.run(sql, book, err => {
-    if (err) {
-      return console.error(err.message);
-    }
-    res.redirect("/data");
-  });
-  const sql2 = "SELECT * FROM Discuter WHERE dateDiscussion = '"+dateDiscussion+"' AND livre_ID = "+id+";";
-  db.all(sql2, [], (err, rows) => {
-    if (err) {
-      return console.error(err.message);
-    }
-	// console.log(rows);
-	// console.log(rows.length);
-	if (rows.length>=2)
-		( 
-			console.log("envoyer la notification")
+    } else {  
+	const id = req.params.id;
+  	
+	console.log("nomuser : "+req.body.nomUtilisateur);
+	console.log("date : "+req.body.dateDiscussion);
+	console.log("id : "+id);
+	const nomUtilisateur=req.body.nomUtilisateur;
+	const dateDiscussion=req.body.dateDiscussion;
+
+	const sql2 = "INSERT INTO Creneau (dateCreneau, Livre_ID) VALUES ('"+dateDiscussion+"','"+id+"');";
+	console.log(sql2);
+		db.run(sql2, err => {
+		if (err) {
+		  return console.error(err.message);
+		}
+		else(
+		console.log("INSERT INTO Creneau (dateCreneau, Livre_ID) VALUES ('"+dateDiscussion+"','"+id+"')")
 		)
+
+
+    const sql0 = "SELECT MAX(idcreneau) as max FROM Creneau";
+    db.all(sql0, [], (err, rows) => {
+    if (err) {
+      return console.error(err.message);
+    }
+	console.log(rows[0].max);
+	var idcren = rows[0].max;
+	console.log ("MAX = "+idcren);
+	
+		// res.redirect("/data");
+		const book = [id, req.body.nomUtilisateur, req.body.dateDiscussion];
+		const sql = "INSERT INTO Discuter (Livre_ID, nomUtilisateur, dateDiscussion, idcreneau) VALUES (?, ?, ?,'"+idcren+"') ;";
+			db.run(sql, book, err => {
+				if (err) {
+				  return console.error(err.message);
+				}
+				res.redirect("/data");
+				
+				const sql3 = "SELECT idcreneau FROM Discuter WHERE dateDiscussion = '"+dateDiscussion+"' AND Livre_ID = "+id+" AND idcreneau <> "+idcren+";";
+				db.all(sql3, [], (err, rows) => {
+					if (err) {
+					  return console.error(err.message);
+					}
+					console.log(rows);
+					console.log(rows.length);
+					if (rows.length>=1)
+						{ 
+							// console.log("envoyer la notification")
+							console.log(" id déja existant est le "+rows[0].idcreneau);
+							//changer le nouvel id de Discussion
+							const sql4 = "UPDATE Discuter SET idcreneau='"+rows[0].idcreneau+"' WHERE nomUtilisateur = '"+nomUtilisateur+"' AND Livre_ID = '"+id+"' AND dateDiscussion = '"+dateDiscussion+"'";
+								db.run(sql4, err => {
+								// if (err) ...
+								});
+							//supprimer l'ancien créneau
+							const sql5 = "DELETE FROM  Creneau WHERE idcreneau = '"+idcren+"'";
+								db.run(sql5, err => {
+								// if (err) ...
+								});
+							
+						}
+				});
+			
+			});
+		});
 	});
 	}
 });
