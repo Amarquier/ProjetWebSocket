@@ -7,20 +7,27 @@
     <thead>
       <tr>
         <th>Date</th>
-        <th>livre</th>
-        <th>utilisateurs</th>
+        <th>Livre</th>
+        <th>Créateur</th>
+		<th>Participants</th>
         <th class="d-print-none">
         </th>
       </tr>
     </thead>
-    <tbody>
+    <tbody> 
       <% for (const book of model) { %>
         <tr>
           <td><%= book.dateDiscussion %></td>
           <td><%= book.Titre %></td>
           <td><%= book.nomUtilisateur %></td>
+          <td><%= book.nomUtilisateur %></td>
           <td class="d-print-none">
+		  <%if (book.nomUtilisateur != pseudo) { %>
             <a class="btn btn-sm btn-warning" href="/join/">Rejoindre</a>
+			<% } %>
+		  <%if (book.nomUtilisateur == pseudo) { %>
+			<a class="btn btn-sm btn-warning" href="/delete/">Annuler</a>
+		  <% } %>
           </td>
         </tr>
       <% } %>

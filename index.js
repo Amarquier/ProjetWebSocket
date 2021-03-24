@@ -159,7 +159,8 @@ app.get("/data", (req, res) => {
       return console.error(err.message);
     }
 	// console.log(rows);
-    res.render("data", { model: rows });
+	var pseudo = req.session.pseudo;
+    res.render("data", { model: rows, pseudo });
   });
 	}
 });
@@ -360,7 +361,7 @@ io.on('connection', socket => {
     login = user;
 
     socket.broadcast.emit('user-connected', { user: login });
-    console.log('conected: ', login)
+    console.log('connected: ', login)
   });
 
   socket.on('disconnect', () => {
