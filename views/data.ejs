@@ -23,10 +23,10 @@
           <td><%= book.nomUtilisateur %></td>
           <td class="d-print-none">
 		  <%if (book.nomUtilisateur != pseudo) { %>
-            <a class="btn btn-sm btn-warning" href="/join/">Rejoindre</a>
+            <a class="btn btn-sm btn-success" href="/join/">Rejoindre</a>
 			<% } %>
 		  <%if (book.nomUtilisateur == pseudo) { %>
-			<a class="btn btn-sm btn-warning" href="/delete/">Annuler</a>
+			<a class="btn btn-sm btn-danger" href="/cancel/">Annuler</a>
 		  <% } %>
           </td>
         </tr>

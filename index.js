@@ -9,8 +9,6 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const session = require('express-session');
 
-
-
 const sql_create_L = `CREATE TABLE IF NOT EXISTS Livres (
   Livre_ID INTEGER PRIMARY KEY AUTOINCREMENT,
   Titre VARCHAR(100) NOT NULL,
@@ -128,7 +126,7 @@ app.post("/goodlogin", (req, res) => {
             });
         }
     });
-    res.render("goodlogin", {model : pseudo});
+    res.render("index", {model : pseudo});
 });
 
 app.get("/about", (req, res) => {
@@ -349,6 +347,28 @@ app.post("/delete/:id", (req, res) => {
     // if (err) ...
     res.redirect("/livres");
   });
+	}
+});
+
+app.get("/join", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
+	res.render("join");
+	}
+});
+
+app.get("/cancel", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
+	res.render("cancel");
 	}
 });
 
