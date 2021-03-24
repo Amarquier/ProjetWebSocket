@@ -16,7 +16,10 @@
 		</div>
 	</div>
 		<br>
-
+		<script>
+		    var today = new Date().toISOString().split('T')[0];
+			document.getElementsByName("dateDiscussion")[0].setAttribute('min', today);
+		</script>
 	<div class="form-group row">
 		<label class="col-form-label col-sm-2" for="nomUtilisateur">Nom</label>
 		<div class="col-sm-10">
