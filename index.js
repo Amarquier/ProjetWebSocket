@@ -170,13 +170,14 @@ app.get("/data", (req, res) => {
         var model = {
             pseudo : req.session.pseudo
     };
-  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID GROUP BY idcreneau";
+	var pseudo = req.session.pseudo
+  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID AND nomUtilisateur='"+pseudo+"' GROUP BY idcreneau";
   db.all(sql, [], (err, rows) => {
     if (err) {
       return console.error(err.message);
     }
+	console.log(sql);
 	// console.log(rows);
-	var pseudo = req.session.pseudo;
     res.render("data", { model: rows, pseudo });
   });
 	}
