@@ -8,8 +8,6 @@
       <tr>
         <th>Date</th>
         <th>Livre</th>
-        <th>Créateur</th>
-		<th>Participants</th>
         <th class="d-print-none">
         </th>
       </tr>
@@ -19,14 +17,9 @@
         <tr>
           <td><%= book.dateDiscussion %></td>
           <td><%= book.Titre %></td>
-          <td><%= book.nomUtilisateur %></td>
-          <td><%= book.nomUtilisateur %></td>
           <td class="d-print-none">
-		  <%if (book.nomUtilisateur != pseudo) { %>
-            <a class="btn btn-sm btn-success" href="/join/">Rejoindre</a>
-			<% } %>
 		  <%if (book.nomUtilisateur == pseudo) { %>
-			<a class="btn btn-sm btn-danger" href="/cancel/">Annuler</a>
+			<a class="btn btn-sm btn-danger" href="/cancel/<%= book.idcreneau %>">Se désinscrire</a>
 		  <% } %>
           </td>
         </tr>

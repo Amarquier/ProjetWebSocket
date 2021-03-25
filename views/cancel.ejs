@@ -1,5 +1,20 @@
 <%- include("_header") -%>
 
-<h1>La proposition de séance a bien été annulée.</h1>
+<h1>Se désister d'un créneau ?</h1>
+
+<form action="/cancel/<%= model.idcreneau %>" method="post">
+  <div class="form-horizontal">
+
+    <%- include("_desister") -%>
+
+    <div class="form-group row">
+      <label class="col-form-label col-sm-2"></label>
+      <div class="col-sm-10">
+        <input type="submit" value="Effacer" class="btn btn-default btn-danger" />
+        <a class="btn btn-outline-dark cancel" href="/data">Annuler</a>
+      </div>
+    </div>
+  </div>
+</form>
 
 <%- include("_footer") -%>

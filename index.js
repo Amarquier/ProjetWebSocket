@@ -171,7 +171,7 @@ app.get("/data", (req, res) => {
             pseudo : req.session.pseudo
     };
 	var pseudo = req.session.pseudo
-  const sql = "SELECT nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID AND nomUtilisateur='"+pseudo+"' GROUP BY idcreneau";
+  const sql = "SELECT idcreneau, nomUtilisateur, dateDiscussion, Titre FROM Discuter, Livres WHERE Livres.Livre_ID=Discuter.livre_ID AND nomUtilisateur='"+pseudo+"' GROUP BY idcreneau";
   db.all(sql, [], (err, rows) => {
     if (err) {
       return console.error(err.message);
@@ -417,14 +417,64 @@ app.get("/join", (req, res) => {
 	}
 });
 
-app.get("/cancel", (req, res) => {
+app.get("/cancel/:id", (req, res) => {
 	    if(!req.session.pseudo){
         res.render("login");
     } else {
         var model = {
             pseudo : req.session.pseudo
     };
-	res.render("cancel");
+  var pseudo = req.session.pseudo
+  const id = req.params.id;
+  const sql =  "SELECT * FROM Discuter WHERE idcreneau='"+id+"' AND nomUtilisateur ='"+pseudo+"'";
+  console.log(sql);
+db.get(sql, [], (err, row) => {
+    if (err) {
+      return console.error(err.message);
+    }
+	console.log(row);
+    res.render("cancel", { model: row });
+  });
+	}
+});
+
+// POST /cancel/:id
+app.post("/cancel/:id", (req, res) => {
+	    if(!req.session.pseudo){
+        res.render("login");
+    } else {
+        var model = {
+            pseudo : req.session.pseudo
+    };
+  var pseudo = req.session.pseudo
+  const id = req.params.id;
+  console.log(id);
+  const sql =  "DELETE FROM Discuter WHERE idcreneau='"+id+"' AND nomUtilisateur ='"+pseudo+"'";
+  console.log(sql);
+  db.run(sql, err => {
+    if (err) {
+      return console.error(err.message);
+    }
+	res.redirect("/data");
+  
+  const sql2 = "SELECT count(nomUtilisateur) as count FROM Discuter WHERE idcreneau='"+id+"'";
+  db.all(sql2, [], (err, rows) => {
+    if (err) {
+      return console.error(err.message);
+    }
+	console.log(rows[0].count);
+	var nbUser = rows[0].count;
+	console.log ("nbuser = "+nbUser);
+	if (nbUser==0) {
+	  const sql3 = "DELETE from Creneau where idcreneau ='"+id+"'";
+	  db.run(sql3, [], (err, rows) => {
+		if (err) {
+		  return console.error(err.message);
+		}		
+	  });
+	}
+  });
+  });
 	}
 });
 
