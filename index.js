@@ -267,6 +267,8 @@ app.post("/edit/:id", (req, res) => {
       return console.error(err.message);
     }
     res.redirect("/livres");
+						console.log(book);
+
   });
 	}
 });
@@ -406,16 +408,7 @@ app.post("/delete/:id", (req, res) => {
 	}
 });
 
-app.get("/join", (req, res) => {
-	    if(!req.session.pseudo){
-        res.render("login");
-    } else {
-        var model = {
-            pseudo : req.session.pseudo
-    };
-	res.render("join");
-	}
-});
+
 
 app.get("/cancel/:id", (req, res) => {
 	    if(!req.session.pseudo){
@@ -426,7 +419,8 @@ app.get("/cancel/:id", (req, res) => {
     };
   var pseudo = req.session.pseudo
   const id = req.params.id;
-  const sql =  "SELECT * FROM Discuter WHERE idcreneau='"+id+"' AND nomUtilisateur ='"+pseudo+"'";
+  const sql2 = "SELECT count(nomUtilisateur) as count FROM Discuter WHERE idcreneau='"+id+"'";
+  const sql =  "SELECT * FROM Discuter WHERE idcreneau='"+id+"'";
   console.log(sql);
 db.get(sql, [], (err, row) => {
     if (err) {
