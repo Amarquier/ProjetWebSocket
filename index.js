@@ -419,15 +419,16 @@ app.get("/cancel/:id", (req, res) => {
     };
   var pseudo = req.session.pseudo
   const id = req.params.id;
-  const sql2 = "SELECT count(nomUtilisateur) as count FROM Discuter WHERE idcreneau='"+id+"'";
   const sql =  "SELECT * FROM Discuter WHERE idcreneau='"+id+"'";
   console.log(sql);
-db.get(sql, [], (err, row) => {
+db.all(sql, [], (err, rows) => {
     if (err) {
       return console.error(err.message);
     }
-	console.log(row);
-    res.render("cancel", { model: row });
+	console.log(rows);
+		console.log(model);
+
+    res.render("cancel", { model: rows });
   });
 	}
 });

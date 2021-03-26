@@ -15,6 +15,10 @@
 <div class="form-group row">
   <label class="col-form-label col-sm-2" for="nomUtilisateur">Participants</label>
   <div class="col-sm-10">
-    <input readonly class="form-control" id="nomUtilisateur" value="<%=model.nomUtilisateur %>"/>
+  <div>
+
+</div>
+    <input readonly class="form-control" id="nomUtilisateur" value="<% for (const book of model) { %>
+<%=book.nomUtilisateur %> ; <% } %>"/>
   </div>
 </div>
