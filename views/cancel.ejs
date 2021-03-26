@@ -2,7 +2,7 @@
 
 <h1>Se désister d'un créneau ?</h1>
 
-<form action="/cancel/<%= model.idcreneau %>" method="post">
+<form action="/cancel/<%= model[0].idcreneau %>" method="post">
   <div class="form-horizontal">
 
     <%- include("_desister") -%>
