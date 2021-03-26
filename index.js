@@ -426,7 +426,7 @@ db.all(sql, [], (err, rows) => {
       return console.error(err.message);
     }
 	console.log(rows);
-		console.log(model);
+
 
     res.render("cancel", { model: rows });
   });
